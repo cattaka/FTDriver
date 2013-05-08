@@ -3,22 +3,22 @@ package jp.ksksue.driver.serial;
 
 /*
  * FTDI Driver Class
- * 
+ *
  * Copyright (C) 2011 @ksksue
  * Licensed under the Apache License, Version 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * thanks to @titoi2 @darkukll @yakagawa @yishii @hyokota555 @juju_suu
  */
 
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
-import android.hardware.usb.UsbConstants;
 import android.util.Log;
 
 enum FTDICHIPTYPE {
@@ -27,9 +27,13 @@ enum FTDICHIPTYPE {
 
 class UsbId {
     int mVid;
+
     int mPid;
+
     int mBcdDevice;
+
     int mNumOfChannels;
+
     FTDICHIPTYPE mType;
 
     UsbId(int vid, int pid, int bcdDevice, int numOfChannels, FTDICHIPTYPE type) {
@@ -64,97 +68,149 @@ public class FTDriver {
             new UsbId(0x0584, 0xB02F, 4, 1, FTDICHIPTYPE.FT232RL), // REX-USB60MI
             new UsbId(0x0000, 0x0000, 0, 1, FTDICHIPTYPE.CDC), // CDC
     };
-    
+
     private static final UsbId IGNORE_IDS = new UsbId(0x1519, 0x0000, 0, 1, FTDICHIPTYPE.NONE);
-    
+
     private UsbId mSelectedDeviceInfo;
 
     public static final int CH_A = 1;
+
     public static final int CH_B = 2;
+
     public static final int CH_C = 3;
+
     public static final int CH_D = 4;
 
     public static final int BAUD300 = 300;
+
     public static final int BAUD600 = 600;
+
     public static final int BAUD1200 = 1200;
+
     public static final int BAUD2400 = 2400;
+
     public static final int BAUD4800 = 4800;
+
     public static final int BAUD9600 = 9600;
+
     public static final int BAUD14400 = 14400;
+
     public static final int BAUD19200 = 19200;
+
     public static final int BAUD38400 = 38400;
+
     public static final int BAUD57600 = 57600;
+
     public static final int BAUD115200 = 115200;
+
     public static final int BAUD230400 = 230400;
 
     public static final int FTDI_SET_DATA_BITS_7 = 7;
+
     public static final int FTDI_SET_DATA_BITS_8 = 8;
+
     public static final int FTDI_SET_DATA_PARITY_NONE = (0x0 << 8);
+
     public static final int FTDI_SET_DATA_PARITY_ODD = (0x1 << 8);
+
     public static final int FTDI_SET_DATA_PARITY_EVEN = (0x2 << 8);
+
     public static final int FTDI_SET_DATA_PARITY_MARK = (0x3 << 8);
+
     public static final int FTDI_SET_DATA_PARITY_SPACE = (0x4 << 8);
+
     public static final int FTDI_SET_DATA_STOP_BITS_1 = (0x0 << 11);
+
     public static final int FTDI_SET_DATA_STOP_BITS_15 = (0x1 << 11);
+
     public static final int FTDI_SET_DATA_STOP_BITS_2 = (0x2 << 11);
+
     public static final int FTDI_SET_NOBREAK = (0x0 << 14);
+
     public static final int FTDI_SET_BREAK = (0x1 << 14);
+
     public static final int FTDI_SET_FLOW_CTRL_NONE = 0x0;
+
     public static final int FTDI_SET_FLOW_RTS_CTS_HS = (0x1 << 8);
+
     public static final int FTDI_SET_FLOW_DTR_DSR_HS = (0x2 << 8);
+
     public static final int FTDI_SET_FLOW_XON_XOFF_HS = (0x4 << 8);
 
     private int[] mSerialProperty = new int[4];
 
     public static final int FTDI_MPSSE_BITMODE_RESET = 0x00;
+
     /** < switch off bitbang mode, back to regular serial/FIFO */
     public static final int FTDI_MPSSE_BITMODE_BITBANG = 0x01;
+
     /** < classical asynchronous bitbang mode, introduced with B-type chips */
     public static final int FTDI_MPSSE_BITMODE_MPSSE = 0x02;
+
     /** < MPSSE mode, available on 2232x chips */
     public static final int FTDI_MPSSE_BITMODE_SYNCBB = 0x04;
+
     /** < synchronous bitbang mode, available on 2232x and R-type chips */
     public static final int FTDI_MPSSE_BITMODE_MCU = 0x08;
+
     /** < MCU Host Bus Emulation mode, available on 2232x chips */
     public static final int FTDI_MPSSE_BITMODE_OPTO = 0x10;
+
     /** < Fast Opto-Isolated Serial Interface Mode, available on 2232x chips */
     public static final int FTDI_MPSSE_BITMODE_CBUS = 0x20;
+
     /** < Bitbang on CBUS pins of R-type chips, configure in EEPROM before */
     public static final int FTDI_MPSSE_BITMODE_SYNCFF = 0x40;
+
     /** < Single Channel Synchronous FIFO mode, available on 2232H chips */
     public static final int FTDI_MPSSE_BITMODE_FT1284 = 0x80;
+
     /** < FT1284 mode, available on 232H chips */
 
     final static int FTDI_SIO_SET_BITMODE_REQUEST = 0x0B;
+
     final static int FTDI_SIO_READ_PINS_REQUEST = 0x0C;
 
     public static final int FTDI_MAX_INTERFACE_NUM = 4;
 
     private static final String TAG = "FTDriver";
+
     private final int mPacketSize = 64;
 
     private UsbManager mManager;
+
     private UsbDevice mDevice;
+
     private UsbDeviceConnection mDeviceConnection;
+
     private UsbInterface[] mInterface = new UsbInterface[FTDI_MAX_INTERFACE_NUM];
 
     private UsbEndpoint[] mFTDIEndpointIN;
+
     private UsbEndpoint[] mFTDIEndpointOUT;
 
     public static final int READBUF_SIZE = 4096;
+
     private int mReadbufOffset;
+
     private int mReadbufRemain;
+
     private byte[] mReadbuf = new byte[READBUF_SIZE];
+
     // private int mBitbangMode = FTDI_MPSSE_BITMODE_RESET;
 
     public static final int WRITEBUF_SIZE = 4096;
 
     /* for USB read packet loss checker */
     private int incReadCount = 0;
+
     private int totalReadCount = 0;
+
     private boolean updateReadCount = false;
 
     private boolean isCDC = false;
+
+    private int mRxTimeout = 100;
 
     public FTDriver(UsbManager manager) {
         mManager = manager;
@@ -163,13 +219,12 @@ public class FTDriver {
         for (int i = 0; i < 4; ++i) {
             // Default Serial Property : Data bit : 8, Parity : none, Stop bit :
             // 1, Tx : off
-            mSerialProperty[i] = FTDI_SET_DATA_PARITY_NONE
-                    | FTDI_SET_DATA_STOP_BITS_1 | 8;
+            mSerialProperty[i] = FTDI_SET_DATA_PARITY_NONE | FTDI_SET_DATA_STOP_BITS_1 | 8;
         }
     }
 
-    // Open an FTDI USB Device
     public boolean begin(int baudrate) {
+        UsbDevice targetDevice = null;
         for (UsbDevice device : mManager.getDeviceList().values()) {
             Log.i(TAG, "Devices : " + device.toString());
 
@@ -181,7 +236,27 @@ public class FTDriver {
             // TODO: support any connections(current version find a first
             // device)
             if (getUsbInterfaces(device)) {
+                targetDevice = device;
                 break;
+            }
+        }
+        if (targetDevice != null) {
+            return begin(baudrate, targetDevice);
+        } else {
+            return false;
+        }
+    }
+
+    // Open an FTDI USB Device
+    public boolean begin(int baudrate, UsbDevice device) {
+        {
+            getPermission(device);
+            if (!mManager.hasPermission(device)) {
+                return false;
+            }
+
+            if (!getUsbInterfaces(device)) {
+                return false;
             }
         }
 
@@ -207,8 +282,7 @@ public class FTDriver {
                 return false;
             }
         } else {
-            if (!setFTDIEndpoints(mInterface,
-                    mSelectedDeviceInfo.mNumOfChannels)) {
+            if (!setFTDIEndpoints(mInterface, mSelectedDeviceInfo.mNumOfChannels)) {
                 return false;
             }
         }
@@ -258,8 +332,8 @@ public class FTDriver {
     public int read(byte[] buf, int channel) {
 
         if (isCDC) {
-            int len = mDeviceConnection.bulkTransfer(mFTDIEndpointIN[channel],
-                    buf, buf.length, 100); // RX
+            int len = mDeviceConnection.bulkTransfer(mFTDIEndpointIN[channel], buf, buf.length,
+                    mRxTimeout); // RX
             if (len < 0) {
                 len = 0;
             }
@@ -283,13 +357,12 @@ public class FTDriver {
                     ++incReadCount;
                     // check count number == read number
                     while ((incReadCount - 1) % 10 != (Byte.valueOf(buf[i]) - '0')) {
-                        Log.d(TAG, "!!! Lost Data !!! count : "
-                                + (incReadCount - 1) + ", data : " + buf[i]);
+                        Log.d(TAG, "!!! Lost Data !!! count : " + (incReadCount - 1) + ", data : "
+                                + buf[i]);
                         ++incReadCount;
                     }
                 }
-                Log.d(TAG,
-                        "read buf length 1 : " + Integer.toString(buf.length));
+                Log.d(TAG, "read buf length 1 : " + Integer.toString(buf.length));
                 totalReadCount += buf.length;
                 updateReadCount = true;
                 /* end of USB read packet loss checker */
@@ -301,14 +374,13 @@ public class FTDriver {
         int needlen = buf.length;
         if (mReadbufRemain > 0) {
             needlen -= mReadbufRemain;
-            System.arraycopy(mReadbuf, mReadbufOffset, buf, ofst,
-                    mReadbufRemain);
+            System.arraycopy(mReadbuf, mReadbufOffset, buf, ofst, mReadbufRemain);
             // for (; mReadbufRemain>0 ; mReadbufRemain-- ) {
             // buf[ofst++] = mReadbuf[mReadbufOffset++];
             // }
         }
-        int len = mDeviceConnection.bulkTransfer(mFTDIEndpointIN[channel],
-                mReadbuf, mReadbuf.length, 0); // RX
+        int len = mDeviceConnection.bulkTransfer(mFTDIEndpointIN[channel], mReadbuf,
+                mReadbuf.length, 0); // RX
         int blocks = len / mPacketSize;
         int remain = len % mPacketSize;
         if (remain > 0) {
@@ -341,10 +413,8 @@ public class FTDriver {
                  */
                 ++incReadCount;
                 while ((incReadCount - 1) % 10 != (Byte.valueOf(buf[ofst - 1]) - '0')) {
-                    Log.d(TAG,
-                            "!!! Lost Data !!! count : " + (incReadCount - 1)
-                                    + ", data : "
-                                    + Byte.toString(buf[ofst - 1]));
+                    Log.d(TAG, "!!! Lost Data !!! count : " + (incReadCount - 1) + ", data : "
+                            + Byte.toString(buf[ofst - 1]));
                     ++incReadCount;
                 }
                 /* End of packet loss checker */
@@ -419,8 +489,8 @@ public class FTDriver {
             // ByteArrayInputStream write_buf = new ByteArrayInputStream(buf);
             // write_buf.read(tmp_buf, offset, write_size);
 
-            actual_length = mDeviceConnection.bulkTransfer(
-                    mFTDIEndpointOUT[channel], write_buf, write_size, 0);
+            actual_length = mDeviceConnection.bulkTransfer(mFTDIEndpointOUT[channel], write_buf,
+                    write_size, 0);
 
             if (actual_length < 0) {
                 return -1;
@@ -432,8 +502,7 @@ public class FTDriver {
     }
 
     public boolean isConnected() {
-        if (mDevice != null && mFTDIEndpointIN != null
-                && mFTDIEndpointOUT != null) {
+        if (mDevice != null && mFTDIEndpointIN != null && mFTDIEndpointOUT != null) {
             return true;
         } else {
             return false;
@@ -445,9 +514,8 @@ public class FTDriver {
         byte[] buffer;
         buffer = new byte[1];
 
-        mDeviceConnection.controlTransfer(UsbConstants.USB_TYPE_VENDOR
-                | UsbConstants.USB_DIR_IN, FTDI_SIO_READ_PINS_REQUEST, 0,
-                index, buffer, 1, 0);
+        mDeviceConnection.controlTransfer(UsbConstants.USB_TYPE_VENDOR | UsbConstants.USB_DIR_IN,
+                FTDI_SIO_READ_PINS_REQUEST, 0, index, buffer, 1, 0);
 
         return buffer[0];
     }
@@ -464,13 +532,12 @@ public class FTDriver {
         }
 
         if (enable) {
-            val = (short) bitmask;
+            val = (short)bitmask;
             val |= (mode << 8);
         }
 
         result = mDeviceConnection.controlTransfer(UsbConstants.USB_TYPE_VENDOR
-                | UsbConstants.USB_DIR_OUT, FTDI_SIO_SET_BITMODE_REQUEST, val,
-                index, null, 0, 0);
+                | UsbConstants.USB_DIR_OUT, FTDI_SIO_SET_BITMODE_REQUEST, val, index, null, 0, 0);
 
         if (result >= 0) {
             ret = true;
@@ -483,13 +550,12 @@ public class FTDriver {
     private void setCdcBaudrate(int baudrate) {
         byte[] baudByte = new byte[4];
 
-        baudByte[0] = (byte) (baudrate & 0x000000FF);
-        baudByte[1] = (byte) ((baudrate & 0x0000FF00) >> 8);
-        baudByte[2] = (byte) ((baudrate & 0x00FF0000) >> 16);
-        baudByte[3] = (byte) ((baudrate & 0xFF000000) >> 24);
+        baudByte[0] = (byte)(baudrate & 0x000000FF);
+        baudByte[1] = (byte)((baudrate & 0x0000FF00) >> 8);
+        baudByte[2] = (byte)((baudrate & 0x00FF0000) >> 16);
+        baudByte[3] = (byte)((baudrate & 0xFF000000) >> 24);
         mDeviceConnection.controlTransfer(0x21, 0x20, 0, 0, new byte[] {
-                baudByte[0], baudByte[1], baudByte[2], baudByte[3], 0x00, 0x00,
-                0x08
+                baudByte[0], baudByte[1], baudByte[2], baudByte[3], 0x00, 0x00, 0x08
         }, 7, 0);
     }
 
@@ -591,12 +657,10 @@ public class FTDriver {
             return false;
         }
 
-        if (flowControl == FTDI_SET_FLOW_CTRL_NONE
-                || flowControl == FTDI_SET_FLOW_RTS_CTS_HS
+        if (flowControl == FTDI_SET_FLOW_CTRL_NONE || flowControl == FTDI_SET_FLOW_RTS_CTS_HS
                 || flowControl == FTDI_SET_FLOW_DTR_DSR_HS
                 || flowControl == FTDI_SET_FLOW_XON_XOFF_HS) {
-            if (mDeviceConnection.controlTransfer(0x40, 0x02, 0x0000, channel,
-                    null, 0, 0) < 0) {
+            if (mDeviceConnection.controlTransfer(0x40, 0x02, 0x0000, channel, null, 0, 0) < 0) {
                 return false;
             } else {
                 return true;
@@ -627,8 +691,8 @@ public class FTDriver {
             return false;
         }
 
-        if (mDeviceConnection.controlTransfer(0x40, 0x04,
-                mSerialProperty[channel - 1], channel, null, 0, 0) < 0) {
+        if (mDeviceConnection.controlTransfer(0x40, 0x04, mSerialProperty[channel - 1], channel,
+                null, 0, 0) < 0) {
             return false;
         } else {
             return true;
@@ -664,10 +728,8 @@ public class FTDriver {
      */
     public boolean setSerialPropertyParity(int parity, int channel) {
         // TODO : test this method
-        if (parity == FTDI_SET_DATA_PARITY_NONE
-                || parity == FTDI_SET_DATA_PARITY_ODD
-                || parity == FTDI_SET_DATA_PARITY_EVEN
-                || parity == FTDI_SET_DATA_PARITY_MARK
+        if (parity == FTDI_SET_DATA_PARITY_NONE || parity == FTDI_SET_DATA_PARITY_ODD
+                || parity == FTDI_SET_DATA_PARITY_EVEN || parity == FTDI_SET_DATA_PARITY_MARK
                 || parity == FTDI_SET_DATA_PARITY_SPACE) {
             mSerialProperty[channel - 1] = (mSerialProperty[channel - 1] & 0xF8FF)
                     | (parity & 0x0700);
@@ -687,8 +749,7 @@ public class FTDriver {
      */
     public boolean setSerialPropertyStopBits(int stopBits, int channel) {
         // TODO : test this method
-        if (stopBits == FTDI_SET_DATA_STOP_BITS_1
-                || stopBits == FTDI_SET_DATA_STOP_BITS_15
+        if (stopBits == FTDI_SET_DATA_STOP_BITS_1 || stopBits == FTDI_SET_DATA_STOP_BITS_15
                 || stopBits == FTDI_SET_DATA_STOP_BITS_2) {
             mSerialProperty[channel - 1] = (mSerialProperty[channel - 1] & 0xE7FF)
                     | (stopBits & 0x1800);
@@ -708,8 +769,7 @@ public class FTDriver {
     public boolean setSerialPropertyBreak(int tx, int channel) {
         // TODO : test this method
         if (tx == FTDI_SET_NOBREAK || tx == FTDI_SET_BREAK) {
-            mSerialProperty[channel - 1] = (mSerialProperty[channel - 1] & 0xBFFF)
-                    | (tx & 0x4000);
+            mSerialProperty[channel - 1] = (mSerialProperty[channel - 1] & 0xBFFF) | (tx & 0x4000);
             return true;
         } else {
             return false;
@@ -722,14 +782,12 @@ public class FTDriver {
      */
     private int calcFTDIBaudrate(int baud, FTDICHIPTYPE chiptype) {
         int divisor = 0;
-        if (chiptype == FTDICHIPTYPE.FT232RL
-                || chiptype == FTDICHIPTYPE.FT2232C
+        if (chiptype == FTDICHIPTYPE.FT232RL || chiptype == FTDICHIPTYPE.FT2232C
                 || chiptype == FTDICHIPTYPE.FT230X) {
             if (baud <= 3000000) {
                 divisor = calcFT232bmBaudBaseToDiv(baud, 48000000);
             } else {
-                Log.e(TAG, "Cannot set baud rate : " + baud
-                        + ", because too high.");
+                Log.e(TAG, "Cannot set baud rate : " + baud + ", because too high.");
                 Log.e(TAG, "Set baud rate : 9600");
                 divisor = calcFT232bmBaudBaseToDiv(9600, 48000000);
             }
@@ -737,8 +795,7 @@ public class FTDriver {
             if (baud <= 12000000 && baud >= 1200) {
                 divisor = calcFT232hBaudBaseToDiv(baud, 120000000);
             } else {
-                Log.e(TAG, "Cannot set baud rate : " + baud
-                        + ", because too high.");
+                Log.e(TAG, "Cannot set baud rate : " + baud + ", because too high.");
                 Log.e(TAG, "Set baud rate : 9600");
                 divisor = calcFT232hBaudBaseToDiv(9600, 120000000);
             }
@@ -819,8 +876,7 @@ public class FTDriver {
     }
 
     // Sets the current USB device and interface
-    private boolean setUSBInterface(UsbDevice device, UsbInterface intf,
-            int intfNum) {
+    private boolean setUSBInterface(UsbDevice device, UsbInterface intf, int intfNum) {
         if (mDeviceConnection != null) {
             if (mInterface[intfNum] != null) {
                 mDeviceConnection.releaseInterface(mInterface[intfNum]);
@@ -841,14 +897,12 @@ public class FTDriver {
                 // TODO: support any connections(current version find a first
                 // device)
                 for (UsbId usbids : IDS) {
-                    if(device.getVendorId() == IGNORE_IDS.mVid ) {
+                    if (device.getVendorId() == IGNORE_IDS.mVid) {
                         break;
                     }
                     // TODO: Refactor it for CDC
-                    if ((usbids.mVid == 0 && usbids.mPid == 0 && device
-                            .getDeviceClass() == UsbConstants.USB_CLASS_COMM) // CDC
-                            || (device.getVendorId() == usbids.mVid && device
-                                    .getProductId() == usbids.mPid)) {
+                    if ((usbids.mVid == 0 && usbids.mPid == 0 && device.getDeviceClass() == UsbConstants.USB_CLASS_COMM) // CDC
+                            || (device.getVendorId() == usbids.mVid && device.getProductId() == usbids.mPid)) {
                         Log.d(TAG, "Vendor ID : " + device.getVendorId());
                         Log.d(TAG, "Product ID : " + device.getProductId());
                         mDevice = device;
@@ -873,11 +927,11 @@ public class FTDriver {
     private boolean getUsbInterfaces(UsbDevice device) {
         UsbInterface[] intf = new UsbInterface[FTDI_MAX_INTERFACE_NUM];
         for (UsbId usbids : IDS) {
-            
-            if(device.getVendorId() == IGNORE_IDS.mVid ) {
+
+            if (device.getVendorId() == IGNORE_IDS.mVid) {
                 break;
             }
-            
+
             // TODO: Refactor it for CDC
             if (usbids.mVid == 0 && usbids.mPid == 0
                     && device.getDeviceClass() == UsbConstants.USB_CLASS_COMM) {
@@ -890,8 +944,7 @@ public class FTDriver {
                     return false;
                 }
             } else {
-                intf = findUSBInterfaceByVIDPID(device, usbids.mVid,
-                        usbids.mPid);
+                intf = findUSBInterfaceByVIDPID(device, usbids.mVid, usbids.mPid);
             }
             if (intf[0] != null) {
                 for (int i = 0; i < usbids.mNumOfChannels; ++i) {
@@ -906,8 +959,7 @@ public class FTDriver {
     }
 
     // searches for an interface on the given USB device by VID and PID
-    private UsbInterface[] findUSBInterfaceByVIDPID(UsbDevice device, int vid,
-            int pid) {
+    private UsbInterface[] findUSBInterfaceByVIDPID(UsbDevice device, int vid, int pid) {
         Log.d(TAG, "findUSBInterface " + device);
         UsbInterface[] retIntf = new UsbInterface[FTDI_MAX_INTERFACE_NUM];
         int j = 0;
@@ -970,8 +1022,7 @@ public class FTDriver {
 
     // when insert the device USB plug into a USB port
     public boolean usbAttached(Intent intent) {
-        UsbDevice device = (UsbDevice) intent
-                .getParcelableExtra(UsbManager.EXTRA_DEVICE);
+        UsbDevice device = (UsbDevice)intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
         return getUsbInterfaces(device);
     }
 
@@ -984,4 +1035,13 @@ public class FTDriver {
             setUSBInterface(null, null, 0);
         }
     }
+
+    public int getRxTimeout() {
+        return mRxTimeout;
+    }
+
+    public void setRxTimeout(int rxTimeout) {
+        mRxTimeout = rxTimeout;
+    }
+
 }
